@@ -1,0 +1,270 @@
+\documentclass[12pt,letterpaper,titlepage]{article}
+\usepackage{float}
+\usepackage[small]{titlesec}
+\usepackage[margin=0.6in]{geometry}
+\usepackage{multirow}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+	backgroundcolor=\color{backcolour},   
+	commentstyle=\color{codegreen},
+	keywordstyle=\color{magenta},
+	numberstyle=\tiny\color{codegray},
+	stringstyle=\color{codepurple},
+	basicstyle=\ttfamily\footnotesize,
+	breakatwhitespace=false,         
+	breaklines=true,                 
+	captionpos=b,                    
+	keepspaces=true,                 
+	numbers=left,                    
+	numbersep=5pt,                  
+	showspaces=false,                
+	showstringspaces=false,
+	showtabs=false,                  
+	tabsize=2
+}
+
+\lstset{style=mystyle}
+
+
+\usepackage{algorithm}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+\usepackage{algorithmic}
+
+\newcommand{\TITLE}[1]{\item[#1]}
+\renewcommand{\algorithmiccomment}[1]{$/\!/$ \parbox[t]{4.5cm}{\raggedright #1}}
+% ugly hack for for/while
+\newbox\fixbox
+\renewcommand{\algorithmicdo}{\setbox\fixbox\hbox{\ {} }\hskip-\wd\fixbox}
+% end of hack
+\newcommand{\algcost}[2]{\strut\hfill\makebox[2.5cm][l]{#1}\makebox[4cm][l]{#2}}
+\usepackage{titlesec}
+\newcommand{\sectionbreak}{\clearpage}
+\usepackage{hyperref}
+\usepackage[T1]{fontenc}
+\usepackage{imakeidx}
+\usepackage{blindtext}
+\usepackage{xstring}
+\usepackage{forloop}
+\usepackage{graphicx}
+\parindent0pt
+\setcounter{secnumdepth}{0}
+%%\makeindex[columns=3, title=Alphabetical Index]
+\begin{document}
+	\title{Editorial Codemania 2023.}
+	\author{Mauricio Tapia}
+	\date{\parbox{\linewidth}{\centering%
+			\today\endgraf\bigskip
+			Development and Algorithmic Hub\endgraf\medskip
+			DAH \endgraf}}
+	\maketitle
+\tableofcontents\newpage
+
+%\section{Consideraciones}
+\clearpage\section{0.-Consideraciones}
+\begin{itemize}
+	\item Durante la competencia se detecto un comportamiento extraño en la solución usada para generar casos de prueba del problema G, después de analizarla se ha decidido que la solución y por consecuencia los casos de prueba generados con ella son correctos, por lo que se recomienda que se intente resolverlo.
+	\item Se asumirá que el lector sabe analizar la complejidad temporal de algoritmos, sin embargo si no se domina esto no sera impedimento para la comprensión de este texto.
+	\item Algunos problemas son mas fáciles de resolver sí se tiene conocimiento previo de ciertos algoritmos, cuando sea el caso, sus nombres serán escritos al revés en la sección de hints.
+	\item En el comprimido donde se encuentra esta editorial se encontraran las soluciones que se usaron para generar los casos de prueba, los casos de prueba y las soluciones descriptivas usadas en este documento.
+	\item Para upsolvear los problemas (resolver después del concurso) recomendamos que se una al siguiente grupo privado. https://codeforces.com/group/r9FP7r2CAt/
+	\item Si deseas representar a tu universidad/preparatoria en concursos nacionales contáctanos en\\ https://www.facebook.com/people/DAH/100089564896614/
+\end{itemize}
+\clearpage\section{A.- An overly elaborate trap.}
+	\subsection{Hints.}
+	\begin{itemize}
+		\item ¿Como se puede simular el derrame de la lava con un solo bloque fuente? \rotatebox{180}{\small{Flood Fill}}
+		\item ¿De las diferentes maneras de simularlo, cual es la adecuada si deseamos conocer el segundo en que el bloque fue tocado por primera vez por la lava? \rotatebox{180}{\small{Flood Fill con BFS}}
+		\item ¿Es posible simular el flujo de todos los bloques de lava a la vez?
+	\end{itemize}
+	\subsection{Solución.}
+	\subsubsection{Simulación de un solo bloque de lava.}
+	Dado un bloque de lava con ubicación en $(r,c)$, es posible simular su flujo colocando sus vecinos inmediatos en una lista, extrayendolos uno por uno y colocando a su vez sus vecinos que aun no han estado en lista, de esta forma hasta que la lista quede vaciá. Ahora, el orden en el que la lista es accedida es importante pues se puede demostrar que, si extraemos primero los elementos que entraron primero a la lista, la cantidad de pasos necesarios para llegar a cada celda es la mínima. Esto se puede lograr de varias formas (priority queue, multiset, list, queue) pero considero que la forma mas limpia de hacerlo es usando una fila, pues dado su comportamiento los elementos que entran primero salen primero.
+	\lstinputlisting[language=C++]{codigosEditorial/AnOverlyElaborateTrap/singleSource.cpp}
+	\subsubsection{Simulación con varios bloques de lava.}
+	Existen dos formas de simular el flujo simultaneo de dos o mas bloques de lava:
+	\begin{itemize}
+		\item Simular uno por uno los bloques de lava a colocar utilizando un \textit{map<int,map<int,bool>~>} declarado localmente para registrar las celdas visitadas, este enfoque por su cuenta demuestra ser demasiado lento para los limites del problema (sin optimizaciones tarda hasta 3 segundos en terminar los casos de prueba mas exigentes), pero sí, durante la simulación se evita procesar aquellas celdas cuyo tiempo registrado sea menor o igual al tiempo que se tardo en ser alcanzada en la simulación actual, este enfoque corre dentro del tiempo limite ($\approx$500ms). La implementación de este enfoque no sera discutida en este documento, pero puede ver su implementación en la carpeta \textit{codigosDesarrolloProblemario}.
+		\item Agregando una celda imaginaria adyacente \textbf{SOLO} a cada una de las celdas padre con un tiempo de llegada de $-1$ y simular como si se tratase de un solo bloque de lava. Es fácil ver como el funcionamiento de la simulación de un solo bloque de lava se traduce bien a este caso.
+	\end{itemize}
+	\subsubsection{Codigo AC(AC.cpp)}
+	\lstinputlisting[language=C++]{codigosEditorial/AnOverlyElaborateTrap/AC.cpp}
+\clearpage\section{B.- Brainfuck.}	
+	\subsection{Hints.}
+	\begin{itemize}
+		\item La correspondencia entero $\rightarrow$ carácter es igual al del código ascii, ¿existe alguna forma de hacer la conversión con algún método nativo del lenguaje?
+		\item El tamaño máximo del arreglo global es $10^{9}$, ¿El limite de memoria nos permitirá crear un arreglo tan grande?
+		\item En caso de no poder crear el arreglo directamente, ¿Que alternativas podrían existir?
+	\end{itemize}
+	\subsection{Solución.}
+	\subsubsection{Implementación del interprete}
+	Por simplicidad, supongamos que para nuestra implementación un arreglo del tamaño necesario fue declarado, en la siguiente sección se darán detalles de como resolver la anotación hecha en el hint $\#2$. La implementación del interprete muestra ser una tarea relativamente sencilla dada la naturaleza secuencial de esta versión de brainfuck, pues basta con iterar cada carácter de la cadena que indica el programa llevando solamente registro del numero de celda en la que esta el puntero. \textbf{Nota:} Los arreglos tienen indices de 0 a $longitud-1$.
+	\lstinputlisting[language=C++]{codigosEditorial/Brainfuck/bfparser.cpp}
+	\subsubsection{Creación/alternativas al arreglo global.}
+	Supongamos que creamos un arreglo global con la longitud que cada caso de prueba nos pide, en el peor de los casos el arreglo puede ser de hasta $10^{9}$ posiciones, asumiendo que usamos el tipo de dato mas compacto \textit{char} ocupando un byte por posicion en el arreglo, su tamaño sería de $953$ MiB, lo cual excede el limite de memoria. Existen dos formas de superar esta limitante:
+	\begin{itemize}
+		\item Utilizando una estructura de datos asociativa (i.e. Maps, HashTables, Dictionaries, etc.) donde solo las posiciones visitadas por brainfuck son creadas, si este enfoque es elegido se debe tener cuidado con el valor por defecto con el cual se inicializa cada posición, pues en C++ suele ser 0, por lo cual si una celda es visitada por primera vez su valor deberá ser cambiado a 32.
+		\item Igualar a $longitud$ con el mínimo entre $longitud$ y $10^{5}$ para después crear un arreglo global con este nuevo valor, esto funciona debido a que el programa es de a lo sumo $10^{5}$ instrucciones, por lo que es imposible que el puntero interactué con mas de $10^{5}$ posiciones del arreglo global.
+	\end{itemize}
+	Las dos alternativas anteriormente mencionadas usan $10^{5}$ posiciones de memoria, suponiendo que usamos $int$ como tipo de dato, ambas soluciones usan menos de 1 MiB de memoria.
+	\subsubsection{Codigo usando map. (bfMap.cpp)}
+	\lstinputlisting[language=C++]{codigosEditorial/Brainfuck/bfMap.cpp}
+	\subsubsection{Codigo usando min (bfMin.cpp)}
+	\lstinputlisting[language=C++]{codigosEditorial/Brainfuck/bfMin.cpp}
+\clearpage
+\section{C.- Cost of Doing Business.}
+\subsection{Hints.}
+\begin{itemize}
+	\item ¿El mínimo costo de llegada a un país $p_{1}$ afecta el costo para llegar a otro país $p_{2}$ ($p_{1} < p_{2}$) si están conectados por un tratado?
+	\item Dado un tratado que va del país $p_{1}$ al país $p_{2}$, ¿Se puede llegar a $p_{2}$ con un costo mínimo a través de algún otro país entre $p_{1}$ y $p_{2}$?
+	\item ¿Como construirías la respuesta usando funciones recursivas sí no te importa la eficiencia?
+	\item ¿Si a la función recursiva le agregar un arreglo que almacena el mínimo costo de llegar a cada país, se haría mas eficiente?
+	\item ¿El orden en que calculamos la respuesta para cada país afecta?
+	\item Construye la respuesta del país cero al país $M$
+	\item ¿Realmente es necesario calcular la respuesta para todos los países del planeta? ¿Que cambiaría si solo la calculamos para los países en el extremo derecho de un tratado?
+	\item Sí un tratado va mas allá de $M$, ¿cambiara la respuesta si cambiamos su extremo derecho a $M$?
+	\item ¿DP + Range queries?
+\end{itemize}
+\subsection{Solución.}
+	Este fue uno de los problemas mas difíciles de codemania, pues no solo requería encontrar una solución de programación dinámica, si no también implementarla usando una estructura de datos especializada en range queries (ie. segment tree, fenwick tree, sparse table, etc.) para lograr una respuesta en $O((M \log M)+(T \log M))$. Para llegar a la solución utilizando programación dinámica, es necesario partir de una solución recursiva (e ineficiente) como la siguiente:
+	\lstinputlisting[language=C++]{codigosEditorial/CostOfDoingBusiness/protoDP.cpp}
+	Existen dos optimizaciones importantes que se pueden hacer a este código:
+	\begin{itemize}
+		\item Memoización, para evitar que la función \textit{solve} con un  argumento en particular se evalué varias veces, es necesario almacenar su valor en una tabla de memoización una vez calculado por primera vez, esto es relativamente sencillo pues basta con inicializar la tabla de memoización con el valor inobtenible de infinito(inf) y usarlo como una bandera que indica si la función en cierto valor ya fue calculada.
+		\item  Calcular \textit{solve} solamente para los extremos derechos de cada tratado, es posible notar que dos países que comparten el mismo conjunto de tratados tienen el mismo costo de llegada, por lo que calcular el costo minimo de llegada de todos los países es redundante, en cambio resulta optimo solo calcular este valor en el ultimo pais de cada tratado.
+	\end{itemize}
+	Implementados estos cambios, la función recursiva(aun ineficiente) luce de la siguiente forma:
+	\lstinputlisting[language=C++]{codigosEditorial/CostOfDoingBusiness/DPstless.cpp}
+	Existen dos fuentes de complejidad en esta función recursiva, el ciclo que verifica cuantos tratados tienen como valor derecho a \textit{paisActual} y el ciclo buscando entre el extremo izquierdo y el \textit{paisActual} el país con costo de llegada mas bajo. Para corregir esto, solo basta con solo iterar por los extremos derechos de cada tratado de menor a mayor país inicial, y para buscar el mínimo en el rango que el tratado cubre, usar una estructura de datos para hacer range queries en $\log M$
+	\lstinputlisting[language=C++]{codigosEditorial/CostOfDoingBusiness/AC.cpp}
+\clearpage\section{D.- Damage Control.}
+\subsection{Fe de erratas.}
+Mientras hacían upsolving de este problema, un equipo notó que el delta en algunas filas de la tabla mostrada como nota en el enunciado del problema estaba equivocado. La versión ya corregida fue subida tanto a OmegaUp como a Codeforces, y recomendamos que vuelvan a leer la nota:
+\begin{center}
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{|l|l|l|l|}
+			\hline
+			$A$                      & $B$     & Resulting Packages        & $\Delta$ sum \\ \hline
+			\multirow{3}{*}{$[3,8]$} & $[8,2]$ & $[(3,8),(8,2)]$ & 11           \\ \cline{2-4} 
+			& $[8,9]$ & $[(3,8),(8,9)]$ & 6            \\ \cline{2-4} 
+			& $[2,9]$ & $[(3,2),(8,9)]$ & 2            \\ \hline
+			\multirow{3}{*}{$[8,1]$} & $[8,2]$ & $[(8,8),(1,2)]$ & 1            \\ \cline{2-4} 
+			& $[8,9]$ & $[(8,8),(1,9)]$ & 8            \\ \cline{2-4} 
+			& $[2,9]$ & $[(8,2),(1,9)]$ & 14           \\ \hline
+			\multirow{3}{*}{$[3,1]$} & $[8,2]$ & $[(3,8),(1,2)]$ & 6            \\ \cline{2-4} 
+			& $[8,9]$ & $[(3,8),(1,9)]$ & 13           \\ \cline{2-4} 
+			& $[2,9]$ & $[(3,2),(1,9)]$ & 9            \\ \hline
+		\end{tabular}
+	\end{table}
+\end{center}
+\subsection{Hints.}
+	\begin{itemize}
+		\item Observa los limites, ¿Es posible resolver el problema por fuerza bruta?
+		\item Si la solución pensada fue por backtracking, ¿Crees que se puedan eliminar ramas recursivas con un $k$ mayor al que recibiste? ¿Mejorara el tiempo de ejecución sí generas los subconjuntos de la segunda banda solamente cuando alcanzas un estado con $k$ objetos en la primera?
+		\item Si pensaste en una solución iterativa, ¿Existe una forma eficiente de generar y representar subconjuntos de forma iterativa?\rotatebox{180}{\small{subset generation using bitmasking}}
+	\end{itemize}
+	\subsection{Solución.}
+	Este problema fue pensado para ser resuelto usando un enfoque de fuerza bruta en $O(\binom{n}{k}^{2})$, pero es necesario notar que un tester descubrió un enfoque usando programación dinámica con complejidad $O(n^{3})$ esta solución sera colocada en \textit{codigosDesarrolloProblemario}. Sus soluciones por fuerza bruta son las siguientes.
+	\subsubsection{Solución recursiva.} 
+	\lstinputlisting[language=C++]{codigosEditorial/DamageControl/ACRecursivo.cpp}
+	\subsubsection{Solución iterativa.} 
+	\lstinputlisting[language=C++]{codigosEditorial/DamageControl/ACIterativo.cpp}
+\clearpage\section{E.- Elimination sort.}
+\subsection{Hints.}
+	\begin{itemize}
+		\item ¿Es realmente necesario implementar el algoritmo tal y como se describe?
+		\item Si un numero no es eliminado de la lista, ¿Que determina cuales de sus números a su derecha si lo sean?
+	\end{itemize}
+\subsection{Solución.}
+	Para este problema, los limites de memoria y de tiempo permiten resolverlo tal y como el algoritmo lo describe o con una implementación mas limpia.
+\subsubsection{Implementación directa.}
+\lstinputlisting[language=C++]{codigosEditorial/EliminationSort/ACDirecto.cpp}
+\subsubsection{Implementación corta.}
+Es posible crear un algoritmo equivalente al descrito en el enunciado del problema pero con una implementación mucho mas corta. Basta con hacer algunos casos de prueba a mano para observar que si un numero en el arreglo original tiene un elemento mas grande a su izquierda, este numero eventualmente será removido y estará ausente en el arreglo final.
+\lstinputlisting[language=C++]{codigosEditorial/EliminationSort/ACLimpio.cpp}
+\clearpage\section{F.- F(r)ontier.}
+\subsection{Hints.}
+\begin{itemize}
+	\item Para leer lineas con espacios en C++ recuerda usar \textit{getline(cin,cadena);}
+	\item Si se mezcla el uso de \textit{cin} con el de \textit{getline}, recuerda poner un \textit{cin.ignore()} despues de cada \textit{cin}.
+	\item ¿Ayudara mantener un registro de que lado tiene una linea vertical para cada letra?
+	\item ¿Puedes pensar en una solución que cuente TVL y despues VVL?
+	\item ¿Consideraste casos especiales (I, HIM, II, IM,HH)?
+\end{itemize}
+\subsection{Solución.}
+La solución a este ejercicio resulta ser bastante directa, solo es necesario hardcodear (Incrustar directamente en el código) que letras tienen una linea izquierda y cuales una linea derecha para después calcular el \textit{Slickness} de la cadena tal y como lo describe el enunciado del problema. \textbf{Nota:} se debe tener cuidado a la hora de contar la letra 'I', pues esta se puede considerar que tiene una linea tanto a la izquierda como en la derecha, lo cual puede llevar a contar la misma linea dos veces.
+\lstinputlisting[language=C++]{codigosEditorial/Frontier/AC.cpp}
+\clearpage\section{G.- Growing Bacteria.}
+\subsection{Hints.}
+\begin{itemize}
+	\item Simula el problema para una bacteria con $D$ pequeño, ¿La cantidad de bacterias en un momento dado se comporta como alguna secuencia de enteros?
+	\item \rotatebox{180}{\small{Fibonacci???}}
+	\item Si el tiempo aumenta, la cantidad de bacterias puede aumentar o permanecer igual.
+	\item \rotatebox{180}{\small{Busqueda binaria sobre el tiempo???}}
+\end{itemize}
+\subsection{Solución.}
+Primero, simulemos el problema para bacterias con $D = 10$, donde cada elemento en la columna de lista de bacterias representa el timer interno de cada bacteria en un momento dado.
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|l|l|l|}
+		\hline
+		Tiempo (Milisegundos) & Lista de Bacterias      & Cantidad \\ \hline
+		0                     & 5                       & 1        \\ \hline
+		5                     & 10,20                   & 2        \\ \hline
+		15                    & 10,10,20                & 3        \\ \hline
+		25                    & 10,10,10,20,20          & 5        \\ \hline
+		35                    & 10,10,10,10,10,20,20,20 & 8        \\ \hline
+	\end{tabular}
+\end{table}
+Es fácil notar que la cantidad de bacterias cada fila de la tabla tiene un parecido a la sucesión de Fibonacci, esto se debe al hecho de que la distancia entre el timer de una nueva bacteria y de su descendiente es exactamente $D$, por lo que cada $D$ segundos las bacterias \textit{viejas} generaran una nueva bacteria nueva, mientras que las anteriores bacterias \textit{nuevas} se convertirán en \textit{viejas}.
+\\~\\
+De la observación anterior es posible concluir lo siguiente: Sí se tiene una bacteria con un valor de tiempo inicial $t_{i}$ y se observa a ella y a sus descendientes en un momento $M$, el número total de bacterias en el grupo será de $fib((M/D)+2)$ si el residuo de la división de $M$ por $D$ es mayor o igual a $t_{i}$. Si el residuo de la división de $M$ por $D$ es menor a $t_{i}$, entonces el número total de bacterias será de $fib((M/D)+3)$. \textbf{Nota:} $fib(0) = 0$, $fib(1) = 1$, $fib(2) = 1$, $fib(3) = 2$ $...$ 
+\\~\\
+También es fácil notar que sí el numero de milisegundos transcurrido aumenta, la cantidad de bacterias puede mantenerse igual o crecer, esto implica que es posible hacer búsqueda binaria sobre el tiempo para encontrar el primer momento donde la cantidad de bacterias es mayor o igual a las requeridas.
+\subsubsection{Implementación.}
+\lstinputlisting[language=C++]{codigosEditorial/GrowingBacteria/AC.cpp}
+\clearpage\section{H.- Harolds CUBG Conondrum.}
+\subsection{Hints.}
+\begin{itemize}
+	\item ¿Es realmente necesario generar todo el mapa para poder explorarlo? 
+	\item ¿Como sabes si un nodo es elegible como punto de reunión?
+	\item Si un nodo no es elegible como punto de reunión ¿es realmente necesario simular cuanto tardan los amigos en llegar al nodo en cuestión?
+	\item ¿Existe una manera mas eficiente de encontrar cuanto tiempo tardan los amigos en llegar?
+\end{itemize}
+\subsection{Solución.}
+Imagina que cada amigo hace todo el recorrido desde su nodo de aparición hasta el centro del mapa (nodo 1) y registra su recorrido. Ahora, si invirtieras esa lista por cada amigo y compararas cada elemento, el primero seria el nodo 1, el segundo seria el nodo 2, el tercero ... y asi de forma sucesiva, si se siguiese comparando la lista hasta que la lista de un amigo acabe o difiera en algún valor, podemos encontrar el ultimo punto en el que coinciden, o dicho de otra manera el nodo en comun $X$ que minimiza la distancia desde los puntos de aparición de cada amigo.
+\\~\\
+Una vez obtenido eso, el tiempo que Harold debe esperar se puede obtener solamente simulando los caminos de todos los amigos hasta el punto de reunion, si Harold es el ultimo en llegar entonces el espera 0 segundos, si alguien mas llega ultimo, Harold debe esperar desde que el llega al nodo de reunión hasta que el ultimo amigo llegue.
+\\
+La implementación demuestra ser relativamente sencilla.
+\lstinputlisting[language=C++]{codigosEditorial/HaroldCUBG/AC.cpp}
+\clearpage\section{I.- Integer Reversal.}
+Existen dos principales formas de hacer esto, usando funciones de strings nativas del lenguaje, o con módulos y divisiones.
+\subsection{Solución}
+\subsubsection{Usando funciones de strings.}
+\lstinputlisting[language=C++]{codigosEditorial/IntegerReversal/ACString.cpp}
+\subsubsection{Usando modulos y divisiones}
+\lstinputlisting[language=C++]{codigosEditorial/IntegerReversal/ACMod.cpp}
+\clearpage\section{J.- Permutation Checker.}
+Se puede resolver de muchas maneras, considerando que el arreglo que se te da en la entrada del problema esta ordenado, una solucion posible seria:
+\lstinputlisting[language=C++]{codigosEditorial/J-Permutation Checker/AC.cpp}
+\clearpage\section{K.- Kodemania?}
+Existen dos formas de implementar este problema: Con un if por cada letra valida de 'kodemania2023' o usando cadenas para evitar escribir todos los ifs.
+\subsection{Solución}
+\subsubsection{Con un if por letra}
+\lstinputlisting[language=C++]{codigosEditorial/Kodemania/ACM.cpp}
+\subsubsection{Usando Strings}
+\lstinputlisting[language=C++]{codigosEditorial/Kodemania/ACS.cpp}
+
+\end{document}
+
